@@ -1,0 +1,18 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ui/*": ["ui/*"],
+      "@theme": ["src/styles/theme"],
+      "@types": ["src/types"],
+      "@app/*": ["app/*"],
+      "@others/*": ["others/*"],
+      "@src/*": ["src/*"]
+    }
+  },
+  "include": ["app/**/*", "src/**/*", "ui/**/*", "others/config/**/*"]
+}
