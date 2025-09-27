@@ -1,12 +1,15 @@
-// app/Home/HomeScreen.js
+// app/Home/HomeScreen.tsx
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, View, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import HeroGreeting from '../../ui/Home/HeroGreeting';
-import PrimaryCTA from '../../ui/Home/PrimaryCTA';
+// New centralized components
+import { HeroGreeting, PrimaryCTA, TopBar } from '../../src/components/home';
 import QuickActionsRow from '../../ui/Home/QuickActionsRow';
 import DailyRecommendationCard from '../../ui/Home/DailyRecommendationCard';
+
+// Design system
+import { colors } from '../../src/styles/design-system';
 
 const character = require('../../others/config/assets/images/male.png');
 
@@ -16,18 +19,24 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.root}>
+      <TopBar
+        onProfilePress={() => router.push('/profile')}
+        profileImageUri="https://i.pravatar.cc/100"
+      />
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HeroGreeting
           characterSrc={character}
           charWidth={Math.min(W * 0.55, 340)}
           charBottom={-320}
           charCenter
+          charRight={0}  
           bubbleWidth={180}
           bubbleMinHeight={120}
           bubbleRight={16}
           bubbleTopOffset={12}
           headNudgeY={-8}
-          bubbleColor="#2BB0B3"
+          bubbleColor={colors.accent.teal}
           tailSide="left"
           tailOffset={0.58}
           tailType="rounded"
@@ -66,9 +75,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FFF9F2' },
+  root: { 
+    flex: 1, 
+    backgroundColor: colors.background.primary 
+  },
   content: {
-    paddingTop: 8,
+    paddingTop: 60, // push down to leave room for profile button
     paddingBottom: 24,
   },
 });

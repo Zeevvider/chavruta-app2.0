@@ -4,26 +4,27 @@ import { View, Text, ScrollView, RefreshControl, StyleSheet } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import dayjs from 'dayjs';
+import { Calendar } from 'react-native-big-calendar';
 
-import { spacing } from '../../src/styles/theme';
+import { spacing, C } from '../../src/styles/theme';
 import { Session } from '../../src/types';
 import { useChavrutaData } from '../../src/hooks/useChavrutaData';
 
 import {
-  Header, Tabs, Section, LiveBanner, HistoryCard, MatchCard,
-  RequestCard, ScheduleRow, PrimaryButton
+  Tabs,
+  Section,
+  LiveBanner,
+  HistoryCard,
+  MatchCard,
+  RequestCard,
 } from '@ui/chavruta';
 
-
-// and any separate: import SessionCard from './components/SessionCard';
-
+// New centralized components
+import { AppHeader, HeroSection } from '../../src/components/chavruta';
 
 import SessionCard from '@ui/chavruta/SessionCard';
-import { C } from 'src/styles/theme'; 
 
-
-
-type TabKey = 'active' | 'matches' | 'requests' | 'schedule';
+type TabKey = 'active' | 'matches' | 'requests' | 'calendar';
 
 export default function ChavrutaScreen() {
   const router = useRouter();
@@ -39,21 +40,18 @@ export default function ChavrutaScreen() {
     refreshing,
     onRefresh,
     nextLive,
-  } = useChavrutaData();
+  }: ReturnType<typeof useChavrutaData> = useChavrutaData();
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Header />
+        <AppHeader />
 
-        {/* Quick status / CTA */}
-        <View style={styles.hero}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>שלום, {you.name}</Text>
-            <Text style={styles.heroSub}>Ready to learn? Your level: {you.level}</Text>
-          </View>
-          <PrimaryButton label="Find chavruta" onPress={() => setTab('matches')} icon="search" />
-        </View>
+        <HeroSection
+          userName={you.name}
+          userLevel={you.level}
+          onFindChavrutaPress={() => setTab('matches')}
+        />
 
         {/* Tabs */}
         <Tabs value={tab} onChange={setTab} />
@@ -69,7 +67,9 @@ export default function ChavrutaScreen() {
               {nextLive ? (
                 <LiveBanner
                   session={nextLive}
-                  onJoin={() => router.push({ pathname: '/chavruta/Room/[id]', params: { id: nextLive.roomId } })}
+                  onJoin={() =>
+                    router.push({ pathname: '/chavruta/Room/[id]', params: { id: nextLive.roomId } })
+                  }
                 />
               ) : null}
 
@@ -81,9 +81,15 @@ export default function ChavrutaScreen() {
                     <SessionCard
                       key={item.id}
                       session={item}
-                      onJoin={() => router.push({ pathname: '/chavruta/Room/[id]', params: { id: item.roomId } })}
-                      onChat={() => router.push({ pathname: '/chat', params: { with: item.chavrutaB.id } })}
-                      onSource={() => router.push({ pathname: '/source', params: { topic: item.topic } })}
+                      onJoin={() =>
+                        router.push({ pathname: '/chavruta/Room/[id]', params: { id: item.roomId } })
+                      }
+                      onChat={() =>
+                        router.push({ pathname: '/chat', params: { with: item.chavrutaB.id } })
+                      }
+                      onSource={() =>
+                        router.push({ pathname: '/source', params: { topic: item.topic } })
+                      }
                     />
                   ))}
               </Section>
@@ -96,7 +102,9 @@ export default function ChavrutaScreen() {
                     <HistoryCard
                       key={item.id}
                       session={item}
-                      onReview={() => router.push({ pathname: '/notes', params: { id: item.id } })}
+                      onReview={() =>
+                        router.push({ pathname: '/notes', params: { id: item.id } })
+                      }
                     />
                   ))}
               </Section>
@@ -153,13 +161,23 @@ export default function ChavrutaScreen() {
             </Section>
           )}
 
-          {tab === 'schedule' && (
-            <Section title="Your schedule">
-              {[...sessions]
-                .sort((a, b) => dayjs(a.startsAt).valueOf() - dayjs(b.startsAt).valueOf())
-                .map((item) => (
-                  <ScheduleRow key={item.id} session={item} />
-                ))}
+          {tab === 'calendar' && (
+            <Section title="Calendar">
+              <View style={{ height: 600 }}>
+                <Calendar
+                  events={sessions.map((s) => ({
+                    title: s.topic,
+                    start: dayjs(s.startsAt).toDate(),
+                    end: dayjs(s.endsAt).toDate(),
+                  }))}
+                  height={600}
+                  mode="week"
+                  onPressCell={(date) => {
+                    console.log('Tapped on slot:', date);
+                    // TODO: open modal to add new chavruta session
+                  }}
+                />
+              </View>
             </Section>
           )}
         </ScrollView>
@@ -171,16 +189,4 @@ export default function ChavrutaScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
   container: { flex: 1, paddingHorizontal: spacing?.lg || 16 },
-  hero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  heroTitle: { color: C.text, fontSize: 20, fontWeight: '700' },
-  heroSub: { color: C.sub, marginTop: 4 },
 });

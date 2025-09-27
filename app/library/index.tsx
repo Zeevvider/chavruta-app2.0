@@ -1,57 +1,74 @@
 // app/library/index.tsx
 import React, { useMemo, useState, useCallback } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, FlatList, Pressable, Image, SafeAreaView, StatusBar
+  View, StyleSheet, ScrollView, SafeAreaView, StatusBar
 } from "react-native";
 import { useRouter } from "expo-router";
 
-type Card = { id: string; title: string; cover: string; ref: string; tags: string[] };
-type Row = { heading: string; items: Card[] };
+// New centralized components
+import { FilterRow, LibrarySection } from "../../src/components/library";
+import { colors } from "../../src/styles/design-system";
 
-const ALL_TAGS = ["All","Beginner","Halacha","Aggadah","Popular","Short Sessions","Shabbat","Berakhot","Moed","Nashim"];
+type LibraryItem = { id: string; title: string; cover: string; ref: string; tags: string[]; studyingCount?: number };
+type LibrarySectionData = { heading: string; items: LibraryItem[] };
 
-const ROWS: Row[] = [
-  { heading: "Popular Now",
-    items: [
-      { id:"berakhot", title:"Berakhot", ref:"Mishnah Berakhot", tags:["Popular","Beginner","Berakhot"], cover:"https://placehold.co/360x540/png" },
-      { id:"shabbat",  title:"Shabbat",  ref:"Mishnah Shabbat",  tags:["Popular","Shabbat","Moed"],     cover:"https://placehold.co/360x540/png" },
-      { id:"taanit",   title:"Taanit",   ref:"Mishnah Taanit",   tags:["Moed"],                          cover:"https://placehold.co/360x540/png" },
-    ]},
-  { heading: "For Beginners",
-    items: [
-      { id:"avot",   title:"Avot",   ref:"Mishnah Avot",   tags:["Beginner","Aggadah"], cover:"https://placehold.co/360x540/png" },
-      // Kitzur card → goes to /library/kitzur topics
-      { id:"kitzur", title:"Kitzur Shulchan Arukh", ref:"Kitzur Shulchan Arukh", tags:["Beginner","Halacha"], cover:"https://placehold.co/360x540/png" },
-    ]},
-  { heading: "Halacha Tracks",
-    items: [
-      { id:"pesachim", title:"Pesachim", ref:"Mishnah Pesachim", tags:["Halacha","Moed"], cover:"https://placehold.co/360x540/png" },
-      { id:"sukkah",   title:"Sukkah",   ref:"Mishnah Sukkah",   tags:["Halacha","Moed"], cover:"https://placehold.co/360x540/png" },
-    ]},
+const ALL_TAGS = [
+  { label: "All", value: "all" },
+  { label: "Beginner", value: "beginner" },
+  { label: "Halacha", value: "halacha" },
+  { label: "Aggadah", value: "aggadah" },
+  { label: "Popular", value: "popular" },
+  { label: "Short Sessions", value: "short" },
+  { label: "Shabbat", value: "shabbat" },
+  { label: "Berakhot", value: "berakhot" },
+  { label: "Moed", value: "moed" },
+  { label: "Nashim", value: "nashim" },
 ];
 
-// layout constants
-const CARD_W = 130;
-const CARD_H = 180;
-const CARD_GAP = 10;
-const SNAP = CARD_W + CARD_GAP;
+const SECTIONS: LibrarySectionData[] = [
+  { 
+    heading: "Popular Now",
+    items: [
+      { id:"berakhot", title:"Berakhot", ref:"Mishnah Berakhot", tags:["popular","beginner","berakhot"], cover:"https://placehold.co/360x540/png", studyingCount: 12 },
+      { id:"shabbat",  title:"Shabbat",  ref:"Mishnah Shabbat",  tags:["popular","shabbat","moed"],     cover:"https://placehold.co/360x540/png", studyingCount: 8 },
+      { id:"taanit",   title:"Taanit",   ref:"Mishnah Taanit",   tags:["moed"],                          cover:"https://placehold.co/360x540/png", studyingCount: 5 },
+      { id:"gemara", title:"Gemara", ref:"Gemara Bavli", tags:["popular"], cover:"https://placehold.co/360x540/png", studyingCount: 15 },
+    ]
+  },
+  { 
+    heading: "For Beginners",
+    items: [
+      { id:"avot",   title:"Avot",   ref:"Mishnah Avot",   tags:["beginner","aggadah"], cover:"https://placehold.co/360x540/png", studyingCount: 20 },
+      { id:"kitzur", title:"Kitzur Shulchan Arukh", ref:"Kitzur Shulchan Arukh", tags:["beginner","halacha"], cover:"https://placehold.co/360x540/png", studyingCount: 7 },
+    ]
+  },
+  { 
+    heading: "Halacha Tracks",
+    items: [
+      { id:"pesachim", title:"Pesachim", ref:"Mishnah Pesachim", tags:["halacha","moed"], cover:"https://placehold.co/360x540/png", studyingCount: 3 },
+      { id:"sukkah",   title:"Sukkah",   ref:"Mishnah Sukkah",   tags:["halacha","moed"], cover:"https://placehold.co/360x540/png", studyingCount: 6 },
+    ]
+  },
+];
 
 export default function Library() {
   const router = useRouter();
-  const [activeTag, setActiveTag] = useState<string>("All");
+  const [activeTag, setActiveTag] = useState<string>("all");
 
-  const filteredRows = useMemo(() => {
-    if (activeTag === "All") return ROWS;
-    return ROWS.map(r => ({ ...r, items: r.items.filter(it => it.tags.includes(activeTag)) }))
-               .filter(r => r.items.length > 0);
+  const filteredSections = useMemo(() => {
+    if (activeTag === "all") return SECTIONS;
+    return SECTIONS.map(section => ({ 
+      ...section, 
+      items: section.items.filter(item => item.tags.includes(activeTag)) 
+    })).filter(section => section.items.length > 0);
   }, [activeTag]);
 
-  const handlePress = useCallback((item: Card) => {
+  const handleItemPress = useCallback((item: LibraryItem) => {
     if (item.id === "kitzur") {
-      // Go to the Kitzur topics grid
       router.push("/library/kitzur");
+    } else if (item.id === "gemara") {
+      router.push("/library/GemaraReader");
     } else {
-      // Default: open the Level Map screen
       router.push({
         pathname: "/game/level-map",
         params: { id: item.id, title: item.title, ref: item.ref },
@@ -59,56 +76,30 @@ export default function Library() {
     }
   }, [router]);
 
-  const renderCard = useCallback(({ item }: { item: Card }) => (
-    <Pressable style={s.card} onPress={() => handlePress(item)}>
-      <Image source={{ uri: item.cover }} style={s.poster} />
-      {/* presence badge (hook up later) */}
-      <View style={s.badge}>
-        <View style={s.dot} />
-        <Text style={s.badgeTxt}>12 studying</Text>
-      </View>
-      <Text numberOfLines={1} style={s.cardTitle}>{item.title}</Text>
-    </Pressable>
-  ), [handlePress]);
+  const handleSeeAllPress = useCallback((sectionTitle: string) => {
+    // TODO: Navigate to full section view
+    console.log(`See all ${sectionTitle}`);
+  }, []);
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />
-      <ScrollView style={s.container} contentInsetAdjustmentBehavior="automatic">
-        {/* FILTER CHIPS */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-          {ALL_TAGS.map(tag => {
-            const active = activeTag === tag;
-            return (
-              <Pressable key={tag} onPress={() => setActiveTag(tag)} style={[s.chip, active && s.chipActive]}>
-                <Text style={[s.chipText, active && s.chipTextActive]}>{tag}</Text>
-                <Text style={[s.plus, active && s.plusActive]}>＋</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+      <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic">
+        <FilterRow
+          filters={ALL_TAGS}
+          activeFilter={activeTag}
+          onFilterChange={setActiveTag}
+        />
 
-        {/* CAROUSEL ROWS */}
-        {filteredRows.map((row, i) => (
-          <View key={i} style={s.section}>
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>{row.heading}</Text>
-              <Pressable hitSlop={8}><Text style={s.seeAll}>See all ›</Text></Pressable>
-            </View>
-
-            <FlatList
-              horizontal
-              data={row.items}
-              keyExtractor={(it) => it.id}
-              renderItem={renderCard}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 10 }}
-              decelerationRate="fast"
-              snapToAlignment="start"
-              snapToInterval={SNAP}
-              getItemLayout={(_, index) => ({ length: SNAP, offset: SNAP * index, index })}
-            />
-          </View>
+        {filteredSections.map((section, index) => (
+          <LibrarySection
+            key={index}
+            title={section.heading}
+            items={section.items}
+            onItemPress={handleItemPress}
+            onSeeAllPress={() => handleSeeAllPress(section.heading)}
+            testID={`section-${index}`}
+          />
         ))}
 
         <View style={{ height: 24 }} />
@@ -117,35 +108,13 @@ export default function Library() {
   );
 }
 
-/* ----------------------------- Styles ----------------------------- */
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0b0b0b" },
-  container: { flex: 1, backgroundColor: "#0b0b0b" },
-
-  chipsRow: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 4 },
-  chip: {
-    flexDirection: "row", alignItems: "center",
-    paddingVertical: 8, paddingHorizontal: 14,
-    borderRadius: 20, borderWidth: 1, borderColor: "#2a2a2a",
-    marginRight: 8, backgroundColor: "#121212"
+const styles = StyleSheet.create({
+  safe: { 
+    flex: 1, 
+    backgroundColor: colors.neutral[950] 
   },
-  chipActive: { backgroundColor: "#ffffff", borderColor: "#ffffff" },
-  chipText: { color: "#e8e8e8", fontWeight: "600" },
-  chipTextActive: { color: "#0b0b0b" },
-  plus: { marginLeft: 8, color: "#9a9a9a", fontSize: 14, fontWeight: "700" },
-  plusActive: { color: "#0b0b0b" },
-
-  section: { marginTop: 12 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, marginBottom: 8 },
-  sectionTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
-  seeAll: { color: "#bdbdbd", fontWeight: "600" },
-
-  card: { width: CARD_W, marginRight: CARD_GAP },
-  poster: { width: CARD_W, height: CARD_H, borderRadius: 12, backgroundColor: "#202020" },
-  cardTitle: { color: "#fff", marginTop: 6, fontWeight: "700" },
-
-  // presence badge
-  badge:{ position:"absolute", left:8, bottom:8, paddingHorizontal:8, paddingVertical:4, borderRadius:12, backgroundColor:"rgba(0,0,0,0.55)", flexDirection:"row", alignItems:"center" },
-  dot:{ width:6, height:6, borderRadius:3, backgroundColor:"#22c55e", marginRight:6 },
-  badgeTxt:{ color:"#fff", fontSize:12, fontWeight:"700" },
+  container: { 
+    flex: 1, 
+    backgroundColor: colors.neutral[950] 
+  },
 });

@@ -3,7 +3,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { C } from 'src/styles/theme';
 
-type TabKey = 'active' | 'matches' | 'requests' | 'schedule';
+type TabKey = 'active' | 'matches' | 'requests' | 'calendar';
 
 export default function Tabs({
   value,
@@ -16,7 +16,7 @@ export default function Tabs({
     { key: 'active', label: 'Active' },
     { key: 'matches', label: 'Matches' },
     { key: 'requests', label: 'Requests' },
-    { key: 'schedule', label: 'Schedule' },
+    { key: 'calendar', label: 'calendar' },
   ];
 
   return (

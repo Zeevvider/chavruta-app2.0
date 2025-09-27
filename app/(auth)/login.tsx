@@ -9,10 +9,13 @@ import {
   Alert,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import { supabase } from 'others/config/lib/supabase';
-import { getRedirectTo } from 'others/config/lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase, getRedirectTo } from 'others/config/lib/supabase';
 
 const isEmail = (v: string) => /.+@.+\..+/.test(v);
+
+// Change this if your real home route is different
+const HOME_ROUTE = '/Home/HomeScreen/';
 
 export default function Login() {
   const router = useRouter();
@@ -27,7 +30,7 @@ export default function Login() {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      router.replace('/'); // go to app home after login
+      router.replace(HOME_ROUTE);
     } catch (e: any) {
       Alert.alert('Sign in failed', e.message);
     } finally {
@@ -42,11 +45,20 @@ export default function Login() {
         provider: 'google',
         options: { redirectTo: getRedirectTo() },
       });
-      // Browser opens; callback route will handle the rest.
+      // Callback screen will handle session and routing afterward
     } catch (e: any) {
       Alert.alert('Google sign-in failed', e.message);
       setLoading(false);
     }
+  };
+
+  const onSkipNow = async () => {
+    // mark that we intentionally skipped (useful if index.tsx checks this)
+    await AsyncStorage.setItem('devSkip', 'true');
+    // optional: mark onboarding as done
+    await AsyncStorage.setItem('onboardingDone', 'true');
+    // go straight to your app's home screen route (bypasses / redirect)
+    router.replace(HOME_ROUTE);
   };
 
   return (
@@ -93,6 +105,11 @@ export default function Login() {
       <Text style={s.footer}>
         Don’t have an account? <Link href="/(auth)/signup">Sign up</Link>
       </Text>
+
+      {/* Developer skip button */}
+      <Pressable style={s.skipBtn} onPress={onSkipNow}>
+        <Text style={s.skipText}>Skip for now</Text>
+      </Pressable>
     </View>
   );
 }
@@ -153,4 +170,6 @@ const s = StyleSheet.create({
   },
   googleText: { color: '#1F2937', fontWeight: '700' },
   footer: { textAlign: 'center', marginTop: 16, color: '#6B7280' },
+  skipBtn: { marginTop: 20, alignSelf: 'center', padding: 8 },
+  skipText: { color: '#9BA3AF', textDecorationLine: 'underline' },
 });

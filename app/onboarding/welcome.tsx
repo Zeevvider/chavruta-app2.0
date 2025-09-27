@@ -9,7 +9,7 @@ export default function Welcome() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../assets/torah.png')} // replace with your asset path
+        source={require('others/config/assets/images/icon.png')} // replace with your asset path
         style={styles.hero}
         resizeMode="contain"
       />

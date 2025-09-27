@@ -1,7 +1,7 @@
-// app/index.js
+// app/index.tsx
 import React from 'react';
-import HomeScreen from './Home/HomeScreen'; // or wherever you saved it
+import { Redirect } from 'expo-router';  // ✅ add this import
 
 export default function Index() {
-  return <HomeScreen />;
+  return <Redirect href="/onboarding/welcome" />;
 }

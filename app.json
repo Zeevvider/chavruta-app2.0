@@ -22,7 +22,16 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.chavrutaapp2.x0"
+      "package": "com.anonymous.chavrutaapp2.x0",
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "BLUETOOTH",
+        "BLUETOOTH_CONNECT",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "favicon": "./others/config/assets/images/favicon.png"
